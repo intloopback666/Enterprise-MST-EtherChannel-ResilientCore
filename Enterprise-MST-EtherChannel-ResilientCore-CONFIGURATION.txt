@@ -1,0 +1,313 @@
+ Dist-1:
+
+conf t
+host Dist-1
+
+vlan 100,200,300,400,500,600,700,800,999
+exit
+
+int ra e 0/0-3, e 1/0-3
+shutdown
+ex
+vtp mode transparent
+
+ !--- Po1: DLS1 <-> DLS2 (Eth 0/0-Eth 0/3) mode on
+ 
+ int ra e 0/0, e 0/3
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 1 mode on
+ exit
+
+interface port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+ 
+ !--- Po2: DLS1 <-> ALS1 (Eth 0/2-Eth 1/0) LACP active
+
+ interface range e 0/2, e 1/0
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 2 mode active
+ exit
+
+interface port-channel 2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+ex
+
+ !
+
+ !--- Po3: DLS1 <-> ALS2 (Eth 0/1-Eth 1/1) PAgP desirable
+
+ interface range e 0/1, e 1/1
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 3 mode desirable
+ exit
+
+interface port-channel 3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+spanning-tree mode mst
+spanning-tree mst configuration
+  name CCNP-MST
+  revision 10
+  instance 1 vlan 100,200
+  instance 2 vlan 300,400
+  instance 3 vlan 500,600
+  instance 4 vlan 700,800
+ exit
+
+spanning-tree etherchannel guard misconfig
+ errdisable recovery cause channel-misconfig
+ errdisable recovery interval 600
+
+spanning-tree mst 1 priority 0
+spanning-tree pathcost method long
+
+int ra po1-3
+  switchport trunk native vlan 999
+  switchport trunk allowed vlan 100,200,300,400,500,600,700,800,999
+exit
+
+*********
+Dist-2:
+
+conf t
+host Dist-2
+
+vlan 100,200,300,400,500,600,700,800,999
+exit
+int ra e 0/0-3, e 1/0-3
+shutdown
+ex
+vtp mode transparent
+
+ !--- Po1: DLS2 <-> DLS1 (Eth 0/0-Eth 0/3) mode on
+
+ interface range e0/0, e 0/3
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 1 mode on
+ exit
+
+interface port-channel 1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+ !--- Po4: DLS2 <-> ALS1 (Eth 0/1-Eth 1/1) LACP active
+
+ interface range e 0/1, e 1/1
+  switchport trunk encapsulation dot1q   ! if supported
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 4 mode active
+ exit
+
+interface port-channel 4
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+ !--- Po5: DLS2 <-> ALS2 (Eth 0/2-Eth 1/0) PAgP desirable
+
+ interface range e 0/2, e 1/0
+  switchport trunk encapsulation dot1q 
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 5 mode desirable
+ exit
+
+interface port-channel 5
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+spanning-tree mode mst
+spanning-tree mst configuration
+  name CCNP-MST
+  revision 10
+  instance 1 vlan 100,200
+  instance 2 vlan 300,400
+  instance 3 vlan 500,600
+  instance 4 vlan 700,800
+ exit
+
+spanning-tree etherchannel guard misconfig
+ errdisable recovery cause channel-misconfig
+ errdisable recovery interval 600
+
+spanning-tree mst 2 priority 0
+spanning-tree pathcost method long
+
+int ra po1, po4-5
+  switchport trunk native vlan 999
+  switchport trunk allowed vlan 100,200,300,400,500,600,700,800,999
+exit
+
+wr mem
+
+***************
+ACC-1:
+
+conf t
+host ACC-1
+
+vlan 100,200,300,400,500,600,700,800,999
+exit
+int ra e 0/0-3, e 1/0-3
+shutdown
+ex
+vtp mode transparent
+
+ !--- Po2: ALS1 <-> DLS1 (Eth 0/2-Eth 1/0) LACP passive
+
+ interface range e 0/2, e 1/0
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 2 mode passive
+ exit
+
+interface port-channel 2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+ !
+ !--- Po4: ALS1 <-> DLS2 (Eth 0/1-Eth 1/1) LACP passive
+
+ interface range e 0/1, e 1/1
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 4 mode passive
+ exit
+
+interface port-channel 4
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+spanning-tree mode mst
+spanning-tree mst configuration
+  name CCNP-MST
+  revision 10
+  instance 1 vlan 100,200
+  instance 2 vlan 300,400
+  instance 3 vlan 500,600
+  instance 4 vlan 700,800
+ exit
+
+spanning-tree etherchannel guard misconfig
+ errdisable recovery cause channel-misconfig
+ errdisable recovery interval 600
+
+spanning-tree mst 3 priority 0
+spanning-tree pathcost method long
+
+int ra po2, po4
+  switchport trunk native vlan 999
+  switchport trunk allowed vlan 100,200,300,400,500,600,700,800,999
+exit
+
+ACC-2:
+
+conf t
+host ACC-2
+
+vlan 100,200,300,400,500,600,700,800,999
+exit
+int ra e 0/0-3, e 1/0-3
+shutdown
+ex
+vtp mode transparent
+ !--- Po3: ALS2 <-> DLS1 (Eth 0/1-Eth 1/1) PAgP auto
+
+ interface range e 0/1, e 1/1
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 3 mode auto
+ exit
+
+interface port-channel 3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+ !--- Po5: ALS2 <-> DLS2 (Eth 0/2-Eth 1/0) PAgP auto
+
+ interface range e 0/2, e 1/0
+  switchport trunk encapsulation dot1q
+  switchport mode trunk
+  switchport nonegotiate
+  channel-group 5 mode auto
+ exit
+
+interface port-channel 5
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate
+exit
+
+spanning-tree mode mst
+ spanning-tree mst configuration
+  name CCNP-MST
+  revision 10
+  instance 1 vlan 100,200
+  instance 2 vlan 300,400
+  instance 3 vlan 500,600
+  instance 4 vlan 700,800
+ exit
+
+spanning-tree etherchannel guard misconfig
+ errdisable recovery cause channel-misconfig
+ errdisable recovery interval 600
+
+spanning-tree mst 4 priority 0
+spanning-tree pathcost method long
+
+int ra po3, po5
+  switchport trunk native vlan 999
+  switchport trunk allowed vlan 100,200,300,400,500,600,700,800,999
+exit
+
+wr mem
+
+for All:
+
+int ra e 0/0-3, e 1/0-3
+no shutdown
+ex
+
+== Verification
+
+sh int tr
+sh ip int br
+show spanning-tree summary
+show errdisable recovery
+show interfaces status err-disabled
+show spanning-tree mst configuration
+show spanning-tree mst 1
+show spanning-tree mst 2
+show spanning-tree mst 3
+show spanning-tree mst 4
+show spanning-tree pathcost method
