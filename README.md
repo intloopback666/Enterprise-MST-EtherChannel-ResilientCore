@@ -11,4 +11,3 @@ Task summary:
 5. Configure MST with your own region name/revision; map VLANs to instances 1–4 and force each instance root to a different switch.
 6. Use 802.1t long path costs.
 
-> *Note: “mode on” bundles don’t negotiate and are easy to misconfigure; used for lab learning, not recommended operationally.*
